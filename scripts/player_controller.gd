@@ -103,6 +103,10 @@ func _physics_process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if GameManager.is_game_over or GameManager.is_game_won:
 		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		if GameManager.arm_reflect():
+			get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("fly") and not event.is_echo():
 		_toggle_fly()
 		get_viewport().set_input_as_handled()

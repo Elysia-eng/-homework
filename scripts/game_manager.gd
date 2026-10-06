@@ -5,14 +5,17 @@ signal coins_changed(coins: int)
 signal checkpoint_activated(world_position: Vector2)
 signal boss_health_changed(health: int, max_health: int)
 signal boss_registered
+signal boss_bar_visibility_changed(is_visible: bool)
 signal keys_changed(count: int)
 signal key_collected(key_id: int)
+signal reflect_state_changed(available: bool, armed: bool)
 signal respawn_requested
 signal game_over
 signal game_won
 
 const MAX_HEALTH: int = 10
 const RESPAWN_COST: int = 5
+const REFLECT_COST: int = 1
 
 var max_health: int = MAX_HEALTH
 var health: int = MAX_HEALTH
@@ -24,6 +27,9 @@ var is_game_won: bool = false
 var boss_max_health: int = 0
 var boss_health: int = 0
 var keys_collected: Array[int] = []
+var boss_bar_visible: bool = false
+var reflect_available: bool = false
+var reflect_armed: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -40,10 +46,15 @@ func reset_state() -> void:
 	boss_max_health = 0
 	boss_health = 0
 	keys_collected.clear()
+	boss_bar_visible = false
+	reflect_available = false
+	reflect_armed = false
 	health_changed.emit(health, max_health)
 	coins_changed.emit(coins)
 	boss_health_changed.emit(boss_health, boss_max_health)
 	keys_changed.emit(keys_collected.size())
+	boss_bar_visibility_changed.emit(boss_bar_visible)
+	reflect_state_changed.emit(reflect_available, reflect_armed)
 
 func add_coins(amount: int = 1) -> void:
 	coins = maxi(coins + amount, 0)
@@ -59,6 +70,41 @@ func collect_key(key_id: int) -> void:
 
 func has_key(key_id: int) -> bool:
 	return keys_collected.has(key_id)
+
+func set_boss_bar_visible(value: bool) -> void:
+	if boss_bar_visible == value:
+		return
+	boss_bar_visible = value
+	boss_bar_visibility_changed.emit(value)
+
+func enable_reflect() -> void:
+	reflect_available = true
+	reflect_armed = false
+	reflect_state_changed.emit(reflect_available, reflect_armed)
+	print("[Game] 反伤已解锁：按鼠标右键可反伤一次（消耗 ", REFLECT_COST, " 枚金币）")
+
+func arm_reflect() -> bool:
+	if not reflect_available:
+		return false
+	if reflect_armed:
+		return false
+	if coins < REFLECT_COST:
+		print("[Game] 金币不足，无法反伤（需要 ", REFLECT_COST, " 枚，当前 ", coins, "）")
+		return false
+	add_coins(-REFLECT_COST)
+	reflect_armed = true
+	reflect_state_changed.emit(reflect_available, reflect_armed)
+	print("[Game] 反伤已激活：下一次 Boss 造成的伤害将反弹给它")
+	return true
+
+func consume_reflect() -> bool:
+	if not reflect_armed:
+		return false
+	reflect_armed = false
+	reflect_available = false
+	reflect_state_changed.emit(reflect_available, reflect_armed)
+	print("[Game] 反伤已触发，状态清除")
+	return true
 
 func activate_checkpoint(world_position: Vector2) -> void:
 	checkpoint_position = world_position
