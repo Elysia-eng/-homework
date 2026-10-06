@@ -16,13 +16,21 @@ extends CharacterBody2D
 @export var shoot_damage: int = 1
 @export var shoot_cooldown: float = 0.25
 
+@export_category("闪现参数")
+@export var dash_distance: float = 34.0
+@export var dash_cooldown: float = 0.45
+@export var double_press_interval: float = 0.3
+
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var shoot_point: Marker2D = $ShootPoint
 
 var flying: bool = false
 var jumps_left: int = 2
 var shoot_timer: float = 0.0
+var dash_timer: float = 0.0
 var spawn_position: Vector2 = Vector2.ZERO
+var _last_left_press: int = -100000
+var _last_right_press: int = -100000
 
 func _ready() -> void:
 	add_to_group("player")
@@ -35,6 +43,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	shoot_timer = maxf(shoot_timer - delta, 0.0)
+	dash_timer = maxf(dash_timer - delta, 0.0)
+	_handle_dash_input()
 
 	if flying:
 		_handle_fly_vertical(delta)
@@ -117,3 +127,48 @@ func _shoot() -> void:
 func _update_sprite_direction() -> void:
 	if velocity.x != 0.0:
 		sprite.flip_h = velocity.x < 0.0
+
+func _handle_dash_input() -> void:
+	var now := Time.get_ticks_msec()
+	if Input.is_action_just_pressed("move_left"):
+		if now - _last_left_press <= int(double_press_interval * 1000.0):
+			_last_left_press = -100000
+			_try_dash(-1)
+		else:
+			_last_left_press = now
+	elif Input.is_action_just_pressed("move_right"):
+		if now - _last_right_press <= int(double_press_interval * 1000.0):
+			_last_right_press = -100000
+			_try_dash(1)
+		else:
+			_last_right_press = now
+
+func _try_dash(direction: int) -> void:
+	if dash_timer > 0.0:
+		return
+	dash_timer = dash_cooldown
+
+	var from := global_position
+	var to := from + Vector2(direction * dash_distance, 0.0)
+
+	var space := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(from, to, 1, [get_rid()])
+	var hit := space.intersect_ray(query)
+	if not hit.is_empty():
+		var wall: Vector2 = hit["position"]
+		to = wall - Vector2(direction * 7.0, 0.0)
+		if direction > 0:
+			to.x = maxf(to.x, from.x)
+		else:
+			to.x = minf(to.x, from.x)
+
+	global_position = to
+	velocity.x = direction * move_speed
+	_play_dash_effect()
+
+func _play_dash_effect() -> void:
+	if sprite == null:
+		return
+	sprite.modulate = Color(0.72, 0.94, 1.0, 0.9)
+	var tween := create_tween()
+	tween.tween_property(sprite, "modulate", Color(1, 1, 1, 1), 0.25)
