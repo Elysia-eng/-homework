@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_snowman.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/game/enemies/snowman.png" id="2_texture"]
+[ext_resource type="PackedScene" path="res://scenes/prefabs/projectiles/bullet_enemy.tscn" id="3_bullet"]
+
+[sub_resource type="CapsuleShape2D" id="Shape_snowman"]
+radius = 5.0
+height = 16.0
+
+[node name="SnowmanEnemy" type="CharacterBody2D"]
+collision_layer = 32
+collision_mask = 1
+script = ExtResource("1_script")
+max_health = 1
+move_speed = 26.0
+shoot_interval = 1.0
+detect_range = 140.0
+bullet_damage = 1
+bullet_scene = ExtResource("3_bullet")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 1)
+shape = SubResource("Shape_snowman")
+
+[node name="FloorProbe" type="RayCast2D" parent="."]
+position = Vector2(-8, 0)
+target_position = Vector2(0, 14)
+collision_mask = 1
