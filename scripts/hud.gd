@@ -6,16 +6,20 @@ const HEART_EMPTY := preload("res://assets/game/ui/heart_empty.png")
 
 const HEART_COUNT: int = 5
 const POINTS_PER_HEART: int = 2
+const TOAST_DURATION: float = 3.0
 
 @onready var _hearts_box: HBoxContainer = $Hearts
 @onready var _health_label: Label = $HealthLabel
 @onready var _coin_label: Label = $CoinPanel/CoinLabel
 @onready var _boss_bar: ProgressBar = $BossBar
 @onready var _boss_label: Label = $BossLabel
+@onready var _key_label: Label = $KeyLabel
+@onready var _toast: Label = $Toast
 @onready var _message: Label = $Message
 @onready var _hint: Label = $Hint
 
 var _hearts: Array[TextureRect] = []
+var _toast_timer: float = 0.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -24,14 +28,24 @@ func _ready() -> void:
 	GameManager.health_changed.connect(_on_health_changed)
 	GameManager.coins_changed.connect(_on_coins_changed)
 	GameManager.boss_health_changed.connect(_on_boss_health_changed)
+	GameManager.key_collected.connect(_on_key_collected)
 	GameManager.game_over.connect(_on_game_over)
 	GameManager.game_won.connect(_on_game_won)
 
 	_on_health_changed(GameManager.health, GameManager.max_health)
 	_on_coins_changed(GameManager.coins)
 	_on_boss_health_changed(GameManager.boss_health, GameManager.boss_max_health)
+	_key_label.visible = false
+	_toast.visible = false
 	_message.visible = false
 	_hint.visible = false
+
+func _process(delta: float) -> void:
+	if _toast_timer <= 0.0:
+		return
+	_toast_timer -= delta
+	if _toast_timer <= 0.0:
+		_toast.visible = false
 
 func _build_hearts() -> void:
 	for i in HEART_COUNT:
@@ -66,9 +80,21 @@ func _on_boss_health_changed(health: int, max_health: int) -> void:
 	_boss_bar.max_value = float(max_health)
 	_boss_bar.value = float(health)
 
+func _on_key_collected(key_id: int) -> void:
+	_key_label.visible = true
+	_key_label.text = "持有钥匙 %d" % key_id
+	_show_toast("获得钥匙 %d！去打开对应的门" % key_id)
+	print("[HUD] 显示钥匙 ", key_id)
+
+func _show_toast(text: String) -> void:
+	_toast.text = text
+	_toast.visible = true
+	_toast_timer = TOAST_DURATION
+
 func _on_game_over() -> void:
 	_boss_bar.visible = false
 	_boss_label.visible = false
+	_toast.visible = false
 	_message.text = "游戏失败 GAME OVER"
 	_message.add_theme_color_override("font_color", Color(0.92, 0.28, 0.32))
 	_message.visible = true
@@ -78,6 +104,7 @@ func _on_game_over() -> void:
 func _on_game_won() -> void:
 	_boss_bar.visible = false
 	_boss_label.visible = false
+	_toast.visible = false
 	_message.text = "游戏胜利 YOU WIN!"
 	_message.add_theme_color_override("font_color", Color(0.98, 0.82, 0.25))
 	_message.visible = true
