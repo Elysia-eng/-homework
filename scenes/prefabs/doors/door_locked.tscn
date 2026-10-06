@@ -1,0 +1,44 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/kenney/tiles/tile_0130.png" id="1_door_top"]
+[ext_resource type="Texture2D" path="res://assets/kenney/tiles/tile_0150.png" id="2_door_bottom"]
+[ext_resource type="Script" path="res://scripts/door.gd" id="3_script"]
+
+[sub_resource type="SystemFont" id="SystemFont_cjk"]
+font_names = PackedStringArray("Microsoft YaHei UI", "Microsoft YaHei", "SimHei", "Noto Sans CJK SC")
+
+[sub_resource type="RectangleShape2D" id="Shape_door"]
+size = Vector2(18, 36)
+
+[node name="Door" type="StaticBody2D" groups=["door"]]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("3_script")
+key_id = 1
+
+[node name="Top" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, -9)
+texture = ExtResource("1_door_top")
+
+[node name="Bottom" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, 9)
+texture = ExtResource("2_door_bottom")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Shape_door")
+
+[node name="Prompt" type="Label" parent="."]
+offset_left = -70.0
+offset_top = -44.0
+offset_right = 70.0
+offset_bottom = -24.0
+theme_override_colors/font_color = Color(1, 0.96, 0.55, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.12, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = SubResource("SystemFont_cjk")
+theme_override_font_sizes/font_size = 10
+text = "需要钥匙 1"
+horizontal_alignment = 1
+vertical_alignment = 1
