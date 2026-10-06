@@ -5,6 +5,8 @@ signal coins_changed(coins: int)
 signal checkpoint_activated(world_position: Vector2)
 signal boss_health_changed(health: int, max_health: int)
 signal boss_registered
+signal keys_changed(count: int)
+signal key_collected(key_id: int)
 signal respawn_requested
 signal game_over
 signal game_won
@@ -21,6 +23,7 @@ var is_game_over: bool = false
 var is_game_won: bool = false
 var boss_max_health: int = 0
 var boss_health: int = 0
+var keys_collected: Array[int] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -36,13 +39,26 @@ func reset_state() -> void:
 	is_game_won = false
 	boss_max_health = 0
 	boss_health = 0
+	keys_collected.clear()
 	health_changed.emit(health, max_health)
 	coins_changed.emit(coins)
 	boss_health_changed.emit(boss_health, boss_max_health)
+	keys_changed.emit(keys_collected.size())
 
 func add_coins(amount: int = 1) -> void:
 	coins = maxi(coins + amount, 0)
 	coins_changed.emit(coins)
+
+func collect_key(key_id: int) -> void:
+	if has_key(key_id):
+		return
+	keys_collected.append(key_id)
+	keys_changed.emit(keys_collected.size())
+	key_collected.emit(key_id)
+	print("[Game] 获得钥匙 ", key_id, "，共 ", keys_collected.size(), " 把")
+
+func has_key(key_id: int) -> bool:
+	return keys_collected.has(key_id)
 
 func activate_checkpoint(world_position: Vector2) -> void:
 	checkpoint_position = world_position
