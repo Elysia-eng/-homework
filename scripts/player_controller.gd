@@ -1,86 +1,92 @@
 extends CharacterBody2D
 
 @export_category("移动参数")
-@export var double_press_interval := 0.3
 @export var move_speed: float = 75.0
 @export var acceleration: float = 600.0
 @export var deceleration: float = 800.0
 @export var jump_velocity: float = -190.0
+@export var max_jumps: int = 2
 
+@export_category("飞行参数")
+@export var fly_speed: float = 90.0
+@export var fly_acceleration: float = 300.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 
-var flying : bool = false
-var last_space_press_time := -1000
+var flying: bool = false
+var jumps_left: int = 2
+var spawn_position: Vector2 = Vector2.ZERO
+
+func _ready() -> void:
+	add_to_group("player")
+	spawn_position = global_position
+	jumps_left = max_jumps
 
 func _physics_process(delta: float) -> void:
+	if GameManager.is_game_over or GameManager.is_game_won:
+		velocity = Vector2.ZERO
+		return
 
-	if !flying:
-		apply_gravity(delta)
-		handle_jump()
+	if flying:
+		_handle_fly_vertical(delta)
 	else:
-		handle_vertical_movement(delta)
-	
-	handle_horizontal_movement(delta)
-	update_sprite_direction()
+		_apply_gravity(delta)
+		if Input.is_action_just_pressed("jump"):
+			_try_jump()
+
+	_handle_horizontal_movement(delta)
+	_update_sprite_direction()
 	move_and_slide()
 
-func apply_gravity(delta: float) -> void:
+	if not flying and is_on_floor():
+		jumps_left = max_jumps
+
+func _unhandled_input(event: InputEvent) -> void:
+	if GameManager.is_game_over or GameManager.is_game_won:
+		return
+	if event.is_action_pressed("fly") and not event.is_echo():
+		_toggle_fly()
+		get_viewport().set_input_as_handled()
+
+func _apply_gravity(delta: float) -> void:
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 
-func handle_vertical_movement(delta:float) -> void:
+func _handle_fly_vertical(delta: float) -> void:
 	var direction := Input.get_axis("squat", "jump")
-	var target_speed := direction * jump_velocity
-	
-	if direction != 0.0:
-		velocity.y = move_toward(
-				velocity.y,
-				target_speed,
-				acceleration * delta
-		)
-	else:
-		velocity.y = move_toward(
-				velocity.y,
-				0.0,
-				acceleration * delta
-		)
-	
-func handle_horizontal_movement(delta: float) -> void:
+	var target_speed := direction * fly_speed
+	velocity.y = move_toward(velocity.y, target_speed, fly_acceleration * delta)
+
+func _handle_horizontal_movement(delta: float) -> void:
 	var direction := Input.get_axis("move_left", "move_right")
-	var target_speed := direction * move_speed
+	var top_speed := fly_speed if flying else move_speed
+	var accel := fly_acceleration if flying else acceleration
+	var brake := fly_acceleration if flying else deceleration
 
 	if direction != 0.0:
-		velocity.x = move_toward(
-				velocity.x,
-				target_speed,
-				acceleration * delta
-		)
+		velocity.x = move_toward(velocity.x, direction * top_speed, accel * delta)
 	else:
-		velocity.x = move_toward(
-				velocity.x,
-				0.0,
-				deceleration * delta
-		)
+		velocity.x = move_toward(velocity.x, 0.0, brake * delta)
 
-func handle_jump() -> void:
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+func _try_jump() -> void:
+	if is_on_floor():
+		jumps_left = max_jumps
+	if jumps_left > 0:
 		velocity.y = jump_velocity
+		jumps_left -= 1
 
-func update_sprite_direction() -> void:
+func _toggle_fly() -> void:
+	flying = not flying
+	if flying:
+		velocity = velocity.lerp(Vector2.ZERO, 0.5)
+	else:
+		jumps_left = maxi(jumps_left, 1)
+
+func _update_sprite_direction() -> void:
 	if velocity.x != 0.0:
 		sprite.flip_h = velocity.x < 0.0
-		
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("fly") and !event.is_echo():
-		handle_space_pressed()
-	
-func handle_space_pressed() -> void:
-	var current_time := Time.get_ticks_msec()
-	var elapsed_time := current_time - last_space_press_time
 
-	if elapsed_time <= double_press_interval * 1000.0:
-		flying = not flying
-		last_space_press_time = -1000
-	else:
-		last_space_press_time = current_time
+func bounce(force: float) -> void:
+	flying = false
+	velocity.y = force
+	jumps_left = max_jumps
