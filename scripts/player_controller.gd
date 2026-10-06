@@ -1,36 +1,36 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
-@export_category("绉诲姩鍙傛暟")
+@export_category("移动参数")
 @export var move_speed: float = 75.0
 @export var acceleration: float = 600.0
 @export var deceleration: float = 800.0
 @export var jump_velocity: float = -190.0
 @export var max_jumps: int = 2
 
-@export_category("椋炶鍙傛暟")
+@export_category("飞行参数")
 @export var fly_speed: float = 90.0
 @export var fly_acceleration: float = 300.0
 
-@export_category("灏勫嚮鍙傛暟")
+@export_category("射击参数")
 @export var bullet_scene: PackedScene
 @export var shoot_damage: int = 1
 @export var shoot_cooldown: float = 0.25
 
-@export_category("闂幇鍙傛暟")
+@export_category("闪现参数")
 @export var dash_distance: float = 34.0
 @export var dash_cooldown: float = 0.45
 @export var double_press_interval: float = 0.3
 
-@export_category("鍙楀嚮鍚庨€€")
+@export_category("受击后退")
 @export var knockback_force: float = 170.0
 @export var knockback_lift: float = -110.0
 @export var knockback_time: float = 0.16
 
-@export_category("鐢熷瓨鍙傛暟")
+@export_category("生存参数")
 @export var invulnerable_time: float = 1.0
 @export var fall_limit_y: float = 380.0
 
-@export_category("涓栫晫杈圭晫锛堟墿寤哄湴鍥炬椂鑷姩閫傞厤锛?)
+@export_category("世界边界（扩建地图时自动适配）")
 
 @export var auto_world_bounds: bool = true
 
@@ -112,7 +112,9 @@ func _apply_gravity(delta: float) -> void:
 		velocity += get_gravity() * delta
 
 func _handle_fly_vertical(delta: float) -> void:
-	var direction := Input.get_axis("squat", "jump")
+	var direction := Input.get_axis("move_up", "squat")
+	if direction == 0.0 and Input.is_action_pressed("jump"):
+		direction = -1.0
 	var target_speed := direction * fly_speed
 	velocity.y = move_toward(velocity.y, target_speed, fly_acceleration * delta)
 
