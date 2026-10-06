@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/game/interactables/spring_red.png" id="1_texture"]
+[ext_resource type="Script" path="res://scripts/spring.gd" id="2_script"]
 
 [sub_resource type="RectangleShape2D" id="Shape_spring"]
 size = Vector2(14, 8)
@@ -8,6 +9,8 @@ size = Vector2(14, 8)
 [node name="SpringRed" type="Area2D" groups=["spring"]]
 collision_layer = 8
 collision_mask = 2
+script = ExtResource("2_script")
+bounce_velocity = -340.0
 
 [node name="Sprite" type="Sprite2D" parent="."]
 texture_filter = 1
@@ -16,4 +19,3 @@ texture = ExtResource("1_texture")
 [node name="ActivationArea" type="CollisionShape2D" parent="."]
 position = Vector2(0, 3)
 shape = SubResource("Shape_spring")
-
