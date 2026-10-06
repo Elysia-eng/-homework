@@ -11,10 +11,17 @@ extends CharacterBody2D
 @export var fly_speed: float = 90.0
 @export var fly_acceleration: float = 300.0
 
+@export_category("射击参数")
+@export var bullet_scene: PackedScene
+@export var shoot_damage: int = 1
+@export var shoot_cooldown: float = 0.25
+
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var shoot_point: Marker2D = $ShootPoint
 
 var flying: bool = false
 var jumps_left: int = 2
+var shoot_timer: float = 0.0
 var spawn_position: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
@@ -27,6 +34,8 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
+	shoot_timer = maxf(shoot_timer - delta, 0.0)
+
 	if flying:
 		_handle_fly_vertical(delta)
 	else:
@@ -35,6 +44,10 @@ func _physics_process(delta: float) -> void:
 			_try_jump()
 
 	_handle_horizontal_movement(delta)
+
+	if _shoot_pressed() and shoot_timer <= 0.0:
+		_shoot()
+
 	_update_sprite_direction()
 	move_and_slide()
 
@@ -82,11 +95,25 @@ func _toggle_fly() -> void:
 	else:
 		jumps_left = maxi(jumps_left, 1)
 
+func _shoot_pressed() -> bool:
+	return InputMap.has_action("shoot") and Input.is_action_pressed("shoot")
+
+func _shoot() -> void:
+	if bullet_scene == null:
+		return
+	shoot_timer = shoot_cooldown
+	var bullet := bullet_scene.instantiate()
+	var from: Vector2 = shoot_point.global_position if shoot_point != null else global_position
+	var to: Vector2 = get_global_mouse_position()
+	var dir := from.direction_to(to)
+	if dir == Vector2.ZERO:
+		dir = Vector2.RIGHT
+	var container: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	container.add_child(bullet)
+	if bullet.has_method("launch"):
+		bullet.launch(dir, from)
+	bullet.set("damage", shoot_damage)
+
 func _update_sprite_direction() -> void:
 	if velocity.x != 0.0:
 		sprite.flip_h = velocity.x < 0.0
-
-func bounce(force: float) -> void:
-	flying = false
-	velocity.y = force
-	jumps_left = max_jumps
