@@ -10,7 +10,7 @@ size = Vector2(14, 8)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("2_script")
-bounce_velocity = -340.0
+bounce_velocity = -650.0
 
 [node name="Sprite" type="Sprite2D" parent="."]
 texture_filter = 1
