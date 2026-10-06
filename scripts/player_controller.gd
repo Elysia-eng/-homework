@@ -103,6 +103,10 @@ func _physics_process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if GameManager.is_game_over or GameManager.is_game_won:
 		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_P:
+		toggle_god_mode()
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		if GameManager.arm_reflect():
 			get_viewport().set_input_as_handled()
@@ -175,8 +179,14 @@ func bounce(force: float) -> void:
 	velocity.y = force
 	jumps_left = max_jumps
 
+func toggle_god_mode() -> void:
+	GameManager.set_god_mode(not GameManager.god_mode)
+	if sprite != null:
+		sprite.modulate = Color(0.62, 0.88, 1.0, 1.0) if GameManager.god_mode else Color(1, 1, 1, 1)
+	print("[Player] 无敌模式 = ", GameManager.god_mode)
+
 func take_damage(amount: int = 1) -> bool:
-	if invulnerable_timer > 0.0 or GameManager.is_game_over or GameManager.is_game_won:
+	if GameManager.god_mode or invulnerable_timer > 0.0 or GameManager.is_game_over or GameManager.is_game_won:
 		return false
 	_start_invulnerability()
 	GameManager.damage_player(amount)
@@ -212,7 +222,8 @@ func _fall_out_of_bounds() -> void:
 	velocity = Vector2.ZERO
 	flying = false
 	knockback_timer = 0.0
-	GameManager.damage_player(1)
+	if not GameManager.god_mode:
+		GameManager.damage_player(1)
 
 func _respawn_point() -> Vector2:
 	return GameManager.checkpoint_position if GameManager.has_checkpoint else spawn_position

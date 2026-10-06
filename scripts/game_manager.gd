@@ -9,6 +9,7 @@ signal boss_bar_visibility_changed(is_visible: bool)
 signal keys_changed(count: int)
 signal key_collected(key_id: int)
 signal reflect_state_changed(available: bool, armed: bool)
+signal god_mode_changed(enabled: bool)
 signal respawn_requested
 signal game_over
 signal game_won
@@ -30,6 +31,7 @@ var keys_collected: Array[int] = []
 var boss_bar_visible: bool = false
 var reflect_available: bool = false
 var reflect_armed: bool = false
+var god_mode: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -49,6 +51,7 @@ func reset_state() -> void:
 	boss_bar_visible = false
 	reflect_available = false
 	reflect_armed = false
+	god_mode = false
 	health_changed.emit(health, max_health)
 	coins_changed.emit(coins)
 	boss_health_changed.emit(boss_health, boss_max_health)
@@ -76,6 +79,11 @@ func set_boss_bar_visible(value: bool) -> void:
 		return
 	boss_bar_visible = value
 	boss_bar_visibility_changed.emit(value)
+
+func set_god_mode(enabled: bool) -> void:
+	god_mode = enabled
+	god_mode_changed.emit(enabled)
+	print("[Game] 无敌模式 = ", enabled)
 
 func enable_reflect() -> void:
 	reflect_available = true

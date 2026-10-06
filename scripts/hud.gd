@@ -15,6 +15,7 @@ const TOAST_DURATION: float = 3.5
 @onready var _boss_label: Label = $BossLabel
 @onready var _key_label: Label = $KeyLabel
 @onready var _reflect_label: Label = $ReflectLabel
+@onready var _god_label: Label = $GodLabel
 @onready var _toast: Label = $Toast
 @onready var _message: Label = $Message
 @onready var _hint: Label = $Hint
@@ -32,6 +33,7 @@ func _ready() -> void:
 	GameManager.boss_bar_visibility_changed.connect(_on_boss_bar_visibility_changed)
 	GameManager.key_collected.connect(_on_key_collected)
 	GameManager.reflect_state_changed.connect(_on_reflect_state_changed)
+	GameManager.god_mode_changed.connect(_on_god_mode_changed)
 	GameManager.game_over.connect(_on_game_over)
 	GameManager.game_won.connect(_on_game_won)
 
@@ -40,6 +42,7 @@ func _ready() -> void:
 	_on_boss_health_changed(GameManager.boss_health, GameManager.boss_max_health)
 	_key_label.visible = false
 	_reflect_label.visible = false
+	_god_label.visible = false
 	_toast.visible = false
 	_message.visible = false
 	_hint.visible = false
@@ -103,6 +106,14 @@ func _on_reflect_state_changed(available: bool, armed: bool) -> void:
 		_show_toast("Boss 无敌已结束！按鼠标右键可反伤一次（消耗 1 金币）")
 	else:
 		_reflect_label.visible = false
+
+func _on_god_mode_changed(enabled: bool) -> void:
+	_god_label.visible = enabled
+	if enabled:
+		_god_label.text = "无敌模式（按 P 关闭）"
+		_show_toast("无敌模式已开启：不会受到任何伤害")
+	else:
+		_show_toast("无敌模式已关闭")
 
 func _show_toast(text: String) -> void:
 	_toast.text = text

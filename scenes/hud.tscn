@@ -120,6 +120,19 @@ theme_override_fonts/font = SubResource("SystemFont_cjk")
 theme_override_font_sizes/font_size = 11
 text = "右键反伤（消耗 1 金币）"
 
+[node name="GodLabel" type="Label" parent="."]
+visible = false
+offset_left = 5.0
+offset_top = 62.0
+offset_right = 300.0
+offset_bottom = 79.0
+theme_override_colors/font_color = Color(0.55, 1, 0.75, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = SubResource("SystemFont_cjk")
+theme_override_font_sizes/font_size = 11
+text = "无敌模式（按 P 关闭）"
+
 [node name="Toast" type="Label" parent="."]
 visible = false
 offset_left = 84.0
