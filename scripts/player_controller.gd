@@ -1,25 +1,40 @@
-extends CharacterBody2D
+﻿extends CharacterBody2D
 
-@export_category("移动参数")
+@export_category("绉诲姩鍙傛暟")
 @export var move_speed: float = 75.0
 @export var acceleration: float = 600.0
 @export var deceleration: float = 800.0
 @export var jump_velocity: float = -190.0
 @export var max_jumps: int = 2
 
-@export_category("飞行参数")
+@export_category("椋炶鍙傛暟")
 @export var fly_speed: float = 90.0
 @export var fly_acceleration: float = 300.0
 
-@export_category("射击参数")
+@export_category("灏勫嚮鍙傛暟")
 @export var bullet_scene: PackedScene
 @export var shoot_damage: int = 1
 @export var shoot_cooldown: float = 0.25
 
-@export_category("闪现参数")
+@export_category("闂幇鍙傛暟")
 @export var dash_distance: float = 34.0
 @export var dash_cooldown: float = 0.45
 @export var double_press_interval: float = 0.3
+
+@export_category("鍙楀嚮鍚庨€€")
+@export var knockback_force: float = 170.0
+@export var knockback_lift: float = -110.0
+@export var knockback_time: float = 0.16
+
+@export_category("鐢熷瓨鍙傛暟")
+@export var invulnerable_time: float = 1.0
+@export var fall_limit_y: float = 380.0
+
+@export_category("涓栫晫杈圭晫锛堟墿寤哄湴鍥炬椂鑷姩閫傞厤锛?)
+
+@export var auto_world_bounds: bool = true
+
+@export var fall_margin: float = 80.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var shoot_point: Marker2D = $ShootPoint
@@ -27,8 +42,11 @@ extends CharacterBody2D
 var flying: bool = false
 var jumps_left: int = 2
 var shoot_timer: float = 0.0
-var dash_timer: float = 0.0
+var invulnerable_timer: float = 0.0
 var spawn_position: Vector2 = Vector2.ZERO
+var dash_timer: float = 0.0
+var knockback_timer: float = 0.0
+var knockback_velocity: Vector2 = Vector2.ZERO
 var _last_left_press: int = -100000
 var _last_right_press: int = -100000
 
@@ -36,6 +54,9 @@ func _ready() -> void:
 	add_to_group("player")
 	spawn_position = global_position
 	jumps_left = max_jumps
+	if auto_world_bounds:
+		_setup_world_bounds()
+	GameManager.respawn_requested.connect(_on_respawn_requested)
 
 func _physics_process(delta: float) -> void:
 	if GameManager.is_game_over or GameManager.is_game_won:
@@ -44,6 +65,18 @@ func _physics_process(delta: float) -> void:
 
 	shoot_timer = maxf(shoot_timer - delta, 0.0)
 	dash_timer = maxf(dash_timer - delta, 0.0)
+	_update_invulnerability(delta)
+
+	if knockback_timer > 0.0:
+		knockback_timer -= delta
+		_apply_gravity(delta)
+		velocity.x = knockback_velocity.x
+		_update_sprite_direction()
+		move_and_slide()
+		if global_position.y > fall_limit_y:
+			_fall_out_of_bounds()
+		return
+
 	_handle_dash_input()
 
 	if flying:
@@ -63,6 +96,9 @@ func _physics_process(delta: float) -> void:
 
 	if not flying and is_on_floor():
 		jumps_left = max_jumps
+
+	if global_position.y > fall_limit_y:
+		_fall_out_of_bounds()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if GameManager.is_game_over or GameManager.is_game_won:
@@ -128,6 +164,61 @@ func _update_sprite_direction() -> void:
 	if velocity.x != 0.0:
 		sprite.flip_h = velocity.x < 0.0
 
+func bounce(force: float) -> void:
+	flying = false
+	velocity.y = force
+	jumps_left = max_jumps
+
+func take_damage(amount: int = 1) -> bool:
+	if invulnerable_timer > 0.0 or GameManager.is_game_over or GameManager.is_game_won:
+		return false
+	_start_invulnerability()
+	GameManager.damage_player(amount)
+	return true
+
+func knockback(source_position: Vector2) -> void:
+	var dir := signf(global_position.x - source_position.x)
+	if is_zero_approx(dir):
+		dir = -1.0 if sprite != null and sprite.flip_h else 1.0
+	knockback_timer = knockback_time
+	knockback_velocity = Vector2(dir * knockback_force, knockback_lift)
+	velocity = knockback_velocity
+	flying = false
+
+func _start_invulnerability() -> void:
+	invulnerable_timer = invulnerable_time
+	if sprite != null:
+		sprite.modulate.a = 1.0
+
+func _update_invulnerability(delta: float) -> void:
+	if invulnerable_timer <= 0.0:
+		return
+	invulnerable_timer -= delta
+	if sprite == null:
+		return
+	if invulnerable_timer <= 0.0:
+		sprite.modulate.a = 1.0
+	else:
+		sprite.modulate.a = 0.35 if int(invulnerable_timer * 14.0) % 2 == 0 else 1.0
+
+func _fall_out_of_bounds() -> void:
+	global_position = _respawn_point()
+	velocity = Vector2.ZERO
+	flying = false
+	knockback_timer = 0.0
+	GameManager.damage_player(1)
+
+func _respawn_point() -> Vector2:
+	return GameManager.checkpoint_position if GameManager.has_checkpoint else spawn_position
+
+func _on_respawn_requested() -> void:
+	global_position = _respawn_point()
+	velocity = Vector2.ZERO
+	flying = false
+	jumps_left = max_jumps
+	knockback_timer = 0.0
+	_start_invulnerability()
+
 func _handle_dash_input() -> void:
 	var now := Time.get_ticks_msec()
 	if Input.is_action_just_pressed("move_left"):
@@ -172,3 +263,45 @@ func _play_dash_effect() -> void:
 	sprite.modulate = Color(0.72, 0.94, 1.0, 0.9)
 	var tween := create_tween()
 	tween.tween_property(sprite, "modulate", Color(1, 1, 1, 1), 0.25)
+
+func _setup_world_bounds() -> void:
+	var bounds := _collect_terrain_bounds()
+	if bounds.size == Vector2.ZERO:
+		return
+
+	fall_limit_y = bounds.end.y + fall_margin
+
+	var cam := get_node_or_null("Camera2D") as Camera2D
+	if cam != null:
+		cam.limit_left = int(bounds.position.x)
+		cam.limit_top = int(bounds.position.y)
+		cam.limit_right = int(bounds.end.x)
+		cam.limit_bottom = int(bounds.end.y)
+
+func _collect_terrain_bounds() -> Rect2:
+	var result := Rect2()
+	var found := false
+	var scene := get_tree().current_scene
+	if scene == null:
+		return result
+	var stack: Array[Node] = [scene]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		for child in node.get_children():
+			stack.append(child)
+		if node is TileMapLayer:
+			var layer := node as TileMapLayer
+			if layer.tile_set == null:
+				continue
+			var used: Rect2i = layer.get_used_rect()
+			if used.size == Vector2i.ZERO:
+				continue
+			var ts: Vector2i = layer.tile_set.tile_size
+			var world := Rect2(
+				layer.global_position + Vector2(used.position * ts),
+				Vector2(used.size * ts))
+			if world.size.x <= 0.0 or world.size.y <= 0.0:
+				continue
+			result = world if not found else result.merge(world)
+			found = true
+	return result if found else Rect2()
