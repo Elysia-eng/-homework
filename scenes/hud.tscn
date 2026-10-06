@@ -1,0 +1,120 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/game/collectibles/coin_gold_round.png" id="1_coin"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="2_script"]
+
+[sub_resource type="SystemFont" id="SystemFont_cjk"]
+font_names = PackedStringArray("Microsoft YaHei UI", "Microsoft YaHei", "SimHei", "Noto Sans CJK SC", "Arial Unicode MS")
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_boss_bg"]
+bg_color = Color(0.14, 0.09, 0.13, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.45, 0.16, 0.2, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_boss_fill"]
+bg_color = Color(0.89, 0.23, 0.27, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("2_script")
+
+[node name="Hearts" type="HBoxContainer" parent="."]
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 95.0
+offset_bottom = 23.0
+theme_override_constants/separation = 0
+
+[node name="HealthLabel" type="Label" parent="."]
+offset_left = 100.0
+offset_top = 7.0
+offset_right = 200.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.2, 0.16, 0.25, 1)
+theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.55)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_cjk")
+theme_override_font_sizes/font_size = 11
+text = "10 / 10"
+
+[node name="CoinPanel" type="HBoxContainer" parent="."]
+offset_left = 392.0
+offset_top = 6.0
+offset_right = 463.0
+offset_bottom = 24.0
+theme_override_constants/separation = 3
+
+[node name="CoinIcon" type="TextureRect" parent="CoinPanel"]
+custom_minimum_size = Vector2(14, 14)
+texture_filter = 1
+texture = ExtResource("1_coin")
+stretch_mode = 5
+
+[node name="CoinLabel" type="Label" parent="CoinPanel"]
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.2, 0.16, 0.25, 1)
+theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.55)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_cjk")
+theme_override_font_sizes/font_size = 11
+text = "x 0"
+
+[node name="BossLabel" type="Label" parent="."]
+visible = false
+offset_left = 318.0
+offset_top = 3.0
+offset_right = 360.0
+offset_bottom = 18.0
+theme_override_colors/font_color = Color(0.35, 0.1, 0.13, 1)
+theme_override_fonts/font = SubResource("SystemFont_cjk")
+theme_override_font_sizes/font_size = 9
+text = "BOSS"
+
+[node name="BossBar" type="ProgressBar" parent="."]
+visible = false
+offset_left = 154.0
+offset_top = 4.0
+offset_right = 314.0
+offset_bottom = 15.0
+theme_override_styles/background = SubResource("StyleBox_boss_bg")
+theme_override_styles/fill = SubResource("StyleBox_boss_fill")
+max_value = 1.0
+value = 0.0
+show_percentage = false
+
+[node name="Message" type="Label" parent="."]
+visible = false
+offset_left = 0.0
+offset_top = 100.0
+offset_right = 468.0
+offset_bottom = 138.0
+theme_override_fonts/font = SubResource("SystemFont_cjk")
+theme_override_font_sizes/font_size = 22
+text = "游戏失败 GAME OVER"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="."]
+visible = false
+offset_left = 0.0
+offset_top = 142.0
+offset_right = 468.0
+offset_bottom = 162.0
+theme_override_colors/font_color = Color(0.25, 0.22, 0.3, 1)
+theme_override_fonts/font = SubResource("SystemFont_cjk")
+theme_override_font_sizes/font_size = 11
+text = "按 R 重新开始  (Press R to restart)"
+horizontal_alignment = 1
+vertical_alignment = 1
