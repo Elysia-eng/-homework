@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/prefabs/enemies/snowman_enemy.tscn" id="19_snow"]
 [ext_resource type="PackedScene" uid="uid://cs3x2r187kqtl" path="res://scenes/prefabs/enemies/boss_snowman.tscn" id="20_boss"]
 [ext_resource type="PackedScene" path="res://scenes/prefabs/hazards/spikes_ground.tscn" id="22_gspikes"]
-[ext_resource type="Script" path="res://scripts/key_door_spawner.gd" id="30_spawner"]
+[ext_resource type="Script" uid="uid://4g2oglw6663o" path="res://scripts/key_door_spawner.gd" id="30_spawner"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="31_hud"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_eb6dy"]
@@ -334,15 +334,15 @@ start_direction = 1
 z_index = 8
 position = Vector2(-470, 442)
 
-[node name="HUD" parent="." instance=ExtResource("31_hud")]
+[node name="HUD" parent="." unique_id=14708166 instance=ExtResource("31_hud")]
 
 [node name="Label" type="Label" parent="." unique_id=1697971756]
 custom_minimum_size = Vector2(600, 100)
-offset_left = 49.0
-offset_top = -245.0
-offset_right = 649.0
-offset_bottom = -89.0
-text = "F键为飞行，尽量少用，除非卡住了。双击a或d可以闪现，空格跳跃，可以二段跳。鼠标左键射击，boss半血会无敌5s，小红旗为存档点，雪人为敌人，玩家生命值为10点，当玩家生命值为0时，会优先扣除5枚金币复活，当金币也不足以复活时，则游戏结束，地刺会扣血"
+offset_left = 131.0
+offset_top = -177.0
+offset_right = 731.0
+offset_bottom = -21.0
+text = "F键为飞行，尽量少用，除非卡住了。双击a或d可以闪现，空格跳跃，可以二段跳。鼠标左键射击，boss半血会无敌5s，小红旗为存档点，雪人为敌人，玩家生命值为10点，当玩家生命值为0时，会优先扣除5枚金币复活，当金币也不足以复活时，则游戏结束，地刺会扣血，按下p键可以无敌，防止卡关"
 label_settings = SubResource("LabelSettings_y64c1")
 autowrap_mode = 1
 
