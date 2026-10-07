@@ -348,10 +348,10 @@ autowrap_mode = 1
 
 [node name="Label2" type="Label" parent="." unique_id=1686003037]
 custom_minimum_size = Vector2(300, 200)
-offset_left = 572.0
-offset_top = 294.0
-offset_right = 872.0
-offset_bottom = 494.0
+offset_left = 734.0
+offset_top = 337.0
+offset_right = 1034.0
+offset_bottom = 537.0
 text = "这里和后面都可以空中加闪现跳过去，因此建议不要飞行过去，除非你红温跳不过去"
 label_settings = SubResource("LabelSettings_lwatc")
 autowrap_mode = 1
